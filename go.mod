@@ -1,6 +1,6 @@
 module github.com/okhomin/exl
 
-go 1.18
+go 1.21
 
 require github.com/tealeg/xlsx/v3 v3.2.4
 
