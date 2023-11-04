@@ -54,6 +54,41 @@ func WriteTo[T WriteConfigurator](w io.Writer, ts []T) error {
 	return f.Write(w)
 }
 
+func ChanWriteTo[T WriteConfigurator](w io.Writer, c <-chan T) error {
+	f := xlsx.NewFile()
+	wc := defaultWriteConfig()
+	tT := new(T)
+	if sheet, _ := f.AddSheet(wc.SheetName); sheet != nil {
+		typ := reflect.TypeOf(tT).Elem().Elem()
+		numField := typ.NumField()
+		header := make([]any, 0, numField)
+		for i := 0; i < numField; i++ {
+			fe := typ.Field(i)
+			name := fe.Name
+			if tt, have := fe.Tag.Lookup(wc.TagName); have {
+				name = tt
+				if name == "-" {
+					continue
+				}
+			}
+			header = append(header, name)
+		}
+		// write header
+		write(sheet, header)
+		for t := range c {
+			data := make([]any, 0, numField)
+			for i := 0; i < numField; i++ {
+				if tt, have := typ.Field(i).Tag.Lookup(wc.TagName); have && tt == "-" {
+					continue
+				}
+				data = append(data, reflect.ValueOf(t).Elem().Field(i).Interface())
+			}
+			write(sheet, data)
+		}
+	}
+	return f.Write(w)
+}
+
 func write0[T WriteConfigurator](f *xlsx.File, ts []T) {
 	wc := defaultWriteConfig()
 	if len(ts) > 0 {
