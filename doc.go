@@ -12,4 +12,4 @@
 // Package exl
 //
 // Excel binding to struct written in Go.(Only supports Go1.18+)
-package exl
+package excel
