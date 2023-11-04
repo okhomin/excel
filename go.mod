@@ -1,4 +1,4 @@
-module github.com/okhomin/exl
+module github.com/okhomin/excel
 
 go 1.21
 
