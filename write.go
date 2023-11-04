@@ -63,23 +63,29 @@ func write0[T WriteConfigurator](f *xlsx.File, ts []T) {
 	if sheet, _ := f.AddSheet(wc.SheetName); sheet != nil {
 		typ := reflect.TypeOf(tT).Elem().Elem()
 		numField := typ.NumField()
-		header := make([]any, numField, numField)
+		header := make([]any, 0, numField)
 		for i := 0; i < numField; i++ {
 			fe := typ.Field(i)
 			name := fe.Name
 			if tt, have := fe.Tag.Lookup(wc.TagName); have {
 				name = tt
+				if name == "-" {
+					continue
+				}
 			}
-			header[i] = name
+			header = append(header, name)
 		}
 		// write header
 		write(sheet, header)
 		if len(ts) > 0 {
 			// write data
 			for _, t := range ts {
-				data := make([]any, numField, numField)
+				data := make([]any, 0, numField)
 				for i := 0; i < numField; i++ {
-					data[i] = reflect.ValueOf(t).Elem().Field(i).Interface()
+					if tt, have := typ.Field(i).Tag.Lookup(wc.TagName); have && tt == "-" {
+						continue
+					}
+					data = append(data, reflect.ValueOf(t).Elem().Field(i).Interface())
 				}
 				write(sheet, data)
 			}
